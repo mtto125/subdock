@@ -137,39 +137,44 @@ export default function PostPage() {
   async function loadComments(pid: string, uid?: string) {
   setCommentsLoading(true)
 
-  // 1번 요청: 댓글 + 프로필 한번에 조회
+  // 1번 요청: 댓글 전체 조회
   const { data: commentsData } = await supabase
     .from('comments')
-    .select('*, profiles(avatar_url)')
+    .select('*')
     .eq('post_id', pid)
 
-  if (!commentsData) { setCommentsLoading(false); return }
+  if (!commentsData || commentsData.length === 0) {
+    setComments([])
+    setCommentsLoading(false)
+    return
+  }
 
-  // 2번 요청: 댓글 좋아요 수 한번에 조회
   const commentIds = commentsData.map((c: any) => c.id)
-  const { data: likesData } = await supabase
-    .from('comment_likes')
-    .select('comment_id')
-    .in('comment_id', commentIds)
+  const authorIds = [...new Set(commentsData.map((c: any) => c.user_id))]
 
-  // 3번 요청: 내가 좋아요한 댓글 한번에 조회
-  const { data: myLikesData } = uid ? await supabase
-    .from('comment_likes')
-    .select('comment_id')
-    .eq('user_id', uid)
-    .in('comment_id', commentIds) : { data: [] }
+  // 2번 요청: 댓글 좋아요 전체 + 내 좋아요 + 프로필 동시 조회
+  const [likesRes, myLikesRes, profilesRes] = await Promise.all([
+    supabase.from('comment_likes').select('comment_id').in('comment_id', commentIds),
+    uid ? supabase.from('comment_likes').select('comment_id').eq('user_id', uid).in('comment_id', commentIds) : Promise.resolve({ data: [] }),
+    supabase.from('profiles').select('id, avatar_url').in('id', authorIds),
+  ])
 
   const likeCountMap: Record<string, number> = {}
-  const myLikeSet = new Set((myLikesData || []).map((l: any) => l.comment_id))
-  ;(likesData || []).forEach((l: any) => {
+  const myLikeSet = new Set((myLikesRes.data || []).map((l: any) => l.comment_id))
+  const profileMap: Record<string, string> = {}
+
+  ;(likesRes.data || []).forEach((l: any) => {
     likeCountMap[l.comment_id] = (likeCountMap[l.comment_id] || 0) + 1
+  })
+  ;(profilesRes.data || []).forEach((p: any) => {
+    profileMap[p.id] = p.avatar_url || ''
   })
 
   const withLikes: CommentWithLikes[] = commentsData.map((c: any) => ({
     ...c,
     likeCount: likeCountMap[c.id] || 0,
     isLiked: myLikeSet.has(c.id),
-    avatar_url: c.profiles?.avatar_url || '',
+    avatar_url: profileMap[c.user_id] || '',
   }))
 
   setComments(withLikes)
