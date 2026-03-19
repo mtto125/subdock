@@ -499,7 +499,7 @@ export default function PostPage() {
               <div>
                 <p className="font-black text-sm group-hover:text-blue-500 transition-colors">{nick}</p>
                 <p className="text-xs text-gray-400">
-                  {new Date(post.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  {new Date(post.created_at).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   &nbsp;·&nbsp;구독자 {subscriberCount.toLocaleString()}명
                 </p>
               </div>
@@ -604,7 +604,7 @@ export default function PostPage() {
                               고정
                             </span>
                           )}
-                          <span className="text-xs text-gray-300">{new Date(comment.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}</span>
+                          <span className="text-xs text-gray-300">{new Date(comment.created_at).toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                           {comment.updated_at && <span className="text-xs text-gray-300">(수정됨)</span>}
                         </div>
                         {editingCommentId === comment.id ? (

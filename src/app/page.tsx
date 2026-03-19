@@ -509,7 +509,7 @@ export default function Home() {
                   const ok = canRead(post.tier)
                   const plain = post.content.replace(/<[^>]*>/gm, '')
                   const preview = ok ? plain : plain.slice(0, 80) + '...'
-                  const date = new Date(post.created_at).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
+                  const date = new Date(post.created_at).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
                   const author = post.author_nickname || post.author_email?.split('@')[0] || '익명'
                   const isLiked = likedPosts.has(post.id)
                   const isBookmarked = bookmarkedPosts.has(post.id)
