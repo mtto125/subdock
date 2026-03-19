@@ -68,7 +68,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { router.push('/'); return }
+      if (!session?.user) { router.replace('/'); return }
       setUser(session.user)
       loadAll(session.user)
     })

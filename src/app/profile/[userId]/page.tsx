@@ -83,7 +83,7 @@ export default function UserProfilePage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user || null
       setCurrentUser(u)
-      if (u?.id === userId) { router.push('/profile'); return }
+      if (u?.id === userId) { router.replace('/profile'); return }
       if (u) {
         loadCurrentProfile(u.id)
         checkSubscription(u.id)

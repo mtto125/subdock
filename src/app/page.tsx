@@ -137,10 +137,10 @@ export default function Home() {
     const { data } = await supabase.from('profiles').select('*').eq('id', uid).single()
     if (data) {
       setProfile(data)
-      if (!data.nickname_set) { window.location.href = '/profile'; return }
+      if (!data.nickname_set) { router.replace('/profile'); return }
     } else {
       await supabase.from('profiles').insert({ id: uid })
-      window.location.href = '/profile'
+      router.replace('/profile')
       return
     }
     await loadUserInteractions(uid)
