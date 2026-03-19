@@ -666,9 +666,32 @@ export default function Home() {
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <input autoFocus value={searchQuery} onChange={e => handleSearch(e.target.value)}
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={e => handleSearch(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      setSearchOpen(false)
+                      setSearchQuery('')
+                      setSearchResults([])
+                      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                    }
+                  }}
                   placeholder="제목, 내용, 닉네임으로 검색..."
                   className="flex-1 text-base outline-none bg-transparent font-semibold placeholder:text-gray-300" />
+                <button
+                  onClick={() => {
+                    if (searchQuery.trim()) {
+                      setSearchOpen(false)
+                      setSearchQuery('')
+                      setSearchResults([])
+                      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                    }
+                  }}
+                  className="text-blue-500 hover:text-blue-600 font-bold text-sm transition-all flex-shrink-0">
+                  검색
+                </button>
                 <button onClick={() => { setSearchOpen(false); setSearchQuery(''); setSearchResults([]) }} className="text-gray-400 hover:text-gray-600 transition-all">✕</button>
               </div>
             </div>
@@ -692,6 +715,18 @@ export default function Home() {
                       </div>
                     </div>
                   ))}
+                  {searchResults.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setSearchOpen(false)
+                        setSearchQuery('')
+                        setSearchResults([])
+                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                      }}
+                      className="w-full mt-2 py-3 text-sm font-bold text-blue-500 hover:bg-blue-50 rounded-2xl transition-all">
+                      검색 결과 전체 보기 →
+                    </button>
+                  )}
                 </div>
               )}
             </div>
