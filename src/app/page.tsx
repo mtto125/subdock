@@ -59,7 +59,6 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const editEditorRef = useRef<HTMLDivElement>(null)
-  // 커서 위치 저장용 (글쓰기 / 수정 각각)
   const savedRangeRef_w = useRef<Range | null>(null)
   const savedRangeRef_e = useRef<Range | null>(null)
   const [wTitle, setWTitle] = useState('')
@@ -78,8 +77,6 @@ export default function Home() {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set())
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
-
-  // 구독
   const [subscribedUsers, setSubscribedUsers] = useState<Set<string>>(new Set())
   const [subModalOpen, setSubModalOpen] = useState(false)
   const [subTargetId, setSubTargetId] = useState('')
@@ -194,35 +191,22 @@ export default function Home() {
   }
 
   async function emailLogin() {
-  setAuthErr('')
-  // 먼저 로그인 시도
-  const { error: e1 } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
-  if (!e1) { showToast('반갑습니다!'); setAuthOpen(false); return }
-
-  // 로그인 실패 시 회원가입 (인증 메일 발송)
-  const { error: e2 } = await supabase.auth.signUp({ email: authEmail, password: authPass })
-  if (!e2) { showToast('인증 메일을 보냈어요! 메일함을 확인해주세요 📬') }
-  else setAuthErr(e2.message)
-}
+    setAuthErr('')
+    const { error: e1 } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
+    if (!e1) { showToast('반갑습니다!'); setAuthOpen(false); return }
+    const { error: e2 } = await supabase.auth.signUp({ email: authEmail, password: authPass })
+    if (!e2) { showToast('인증 메일을 보냈어요! 메일함을 확인해주세요 📬') }
+    else setAuthErr(e2.message)
+  }
 
   async function doLogout() { await supabase.auth.signOut(); showToast('로그아웃됐어요') }
 
-  // 커서 위치 저장
   function saveSelection(rangeRef: React.MutableRefObject<Range | null>) {
     const sel = window.getSelection()
-    if (sel && sel.rangeCount > 0) {
-      rangeRef.current = sel.getRangeAt(0).cloneRange()
-    }
+    if (sel && sel.rangeCount > 0) rangeRef.current = sel.getRangeAt(0).cloneRange()
   }
 
-  // 공통 이미지 업로드 함수
-  async function uploadImageFile(
-    file: File,
-    editorRef: React.RefObject<HTMLDivElement | null>,
-    rangeRef: React.MutableRefObject<Range | null>,
-    x?: number,
-    y?: number
-  ) {
+  async function uploadImageFile(file: File, editorRef: React.RefObject<HTMLDivElement | null>, rangeRef: React.MutableRefObject<Range | null>, x?: number, y?: number) {
     if (!user) return
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const safeName = `${Date.now()}.${ext}`
@@ -237,9 +221,7 @@ export default function Home() {
       const sel = window.getSelection()
       if (x !== undefined && y !== undefined) {
         const range = document.caretRangeFromPoint(x, y)
-        if (range && editor.contains(range.startContainer)) {
-          sel?.removeAllRanges(); sel?.addRange(range)
-        }
+        if (range && editor.contains(range.startContainer)) { sel?.removeAllRanges(); sel?.addRange(range) }
       } else if (rangeRef.current && sel) {
         sel.removeAllRanges(); sel.addRange(rangeRef.current)
       }
@@ -248,23 +230,13 @@ export default function Home() {
     showToast('이미지 삽입 완료')
   }
 
-  // 파일 선택으로 업로드
-  async function uploadImg(
-    e: React.ChangeEvent<HTMLInputElement>,
-    ref: React.RefObject<HTMLDivElement | null>,
-    rangeRef: React.MutableRefObject<Range | null>
-  ) {
+  async function uploadImg(e: React.ChangeEvent<HTMLInputElement>, ref: React.RefObject<HTMLDivElement | null>, rangeRef: React.MutableRefObject<Range | null>) {
     if (!e.target.files?.[0] || !user) return
     await uploadImageFile(e.target.files[0], ref, rangeRef)
     e.target.value = ''
   }
 
-  // 드래그 앤 드롭으로 업로드
-  async function handleDrop(
-    e: React.DragEvent<HTMLDivElement>,
-    ref: React.RefObject<HTMLDivElement | null>,
-    rangeRef: React.MutableRefObject<Range | null>
-  ) {
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>, ref: React.RefObject<HTMLDivElement | null>, rangeRef: React.MutableRefObject<Range | null>) {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0]
     if (!file || !file.type.startsWith('image/') || !user) return
@@ -381,6 +353,7 @@ export default function Home() {
 
   function filterCat(cat: string, label?: string) {
     setActiveCat(cat); setSubLabel(label || ''); setGameDropOpen(false)
+    if (view !== 'feed') setView('feed')
   }
 
   function SubBtn({ targetId, targetNick }: { targetId: string; targetNick: string }) {
@@ -415,8 +388,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-gray-200 px-5 py-3">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
+      {/* NAV */}
+      <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-gray-200">
+        {/* 상단 바 */}
+        <div className="max-w-6xl mx-auto px-5 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-blue-500 cursor-pointer"
               onClick={() => { setView('feed'); loadPosts('all'); setActiveCat('all') }}>
@@ -435,21 +410,53 @@ export default function Home() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </button>
             {loading ? (
-  <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse" />
-) : user ? (
-  <>
-    <a href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition-all no-underline">
-      <img src={profile?.avatar_url || `https://api.dicebear.com/8.x/thumbs/svg?seed=${user.id}`} className="w-7 h-7 rounded-full object-cover bg-gray-100" alt="" />
-      <span className="text-sm font-bold text-gray-800 max-w-[80px] truncate">{profile?.nickname || user.email?.split('@')[0]}</span>
-    </a>
-    <button onClick={doLogout} className="text-sm font-semibold text-gray-500 px-4 py-2 rounded-full hover:bg-gray-100 transition-all">로그아웃</button>
-    <button onClick={() => setView('write')} className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow transition-all">글쓰기</button>
-  </>
-) : (
-  <button onClick={() => setAuthOpen(true)} className="text-sm font-semibold text-gray-500 px-4 py-2 rounded-full hover:bg-gray-100 transition-all">로그인</button>
-)}
+              <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse" />
+            ) : user ? (
+              <>
+                <a href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition-all no-underline">
+                  <img src={profile?.avatar_url || `https://api.dicebear.com/8.x/thumbs/svg?seed=${user.id}`} className="w-7 h-7 rounded-full object-cover bg-gray-100" alt="" />
+                  <span className="text-sm font-bold text-gray-800 max-w-[80px] truncate">{profile?.nickname || user.email?.split('@')[0]}</span>
+                </a>
+                <button onClick={doLogout} className="text-sm font-semibold text-gray-500 px-4 py-2 rounded-full hover:bg-gray-100 transition-all">로그아웃</button>
+                <button onClick={() => setView('write')} className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow transition-all">글쓰기</button>
+              </>
+            ) : (
+              <button onClick={() => setAuthOpen(true)} className="text-sm font-semibold text-gray-500 px-4 py-2 rounded-full hover:bg-gray-100 transition-all">로그인</button>
+            )}
           </div>
         </div>
+
+        {/* 카테고리 탭 — 피드 뷰일 때만 표시 */}
+        {view === 'feed' && (
+          <div className="max-w-6xl mx-auto px-5 pb-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              {(['all','jpop','vocaloid','game','etc'] as const).map(cat => (
+                <button key={cat} onClick={() => filterCat(cat)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat && !GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                  {cat === 'all' ? '전체' : cat === 'jpop' ? 'J-pop' : cat === 'vocaloid' ? '보컬로이드' : cat === 'game' ? '일반 게임' : '기타'}
+                </button>
+              ))}
+              {/* 서브컬처 게임 드롭다운 */}
+              <div className="relative flex-shrink-0" ref={gameDropRef}>
+                <button onClick={() => setGameDropOpen(!gameDropOpen)}
+                  className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                  {GAMES.includes(activeCat) && subLabel ? subLabel : '서브컬처 게임'}
+                  <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {gameDropOpen && (
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-30 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
+                    {GAMES.map(g => (
+                      <button key={g} onClick={() => filterCat(g, CAT[g].label)}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
+                        {CAT[g].label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="max-w-6xl mx-auto px-5 py-10">
@@ -458,42 +465,10 @@ export default function Home() {
         {view === 'feed' && (
           <div className="fade-in">
             <div className="mb-8">
-              <h2 className="text-4xl font-black mb-2 tracking-tight">최신 도킹 소식</h2>
+              <h2 className="text-4xl font-black mb-2 tracking-tight">
+                {activeCat === 'all' ? '최신 도킹 소식' : GAMES.includes(activeCat) ? subLabel || CAT[activeCat]?.label : CAT[activeCat]?.label || '최신 도킹 소식'}
+              </h2>
               <p className="text-gray-400 text-sm">서브컬처 덕후들이 직접 정리한 정보들</p>
-            </div>
-            <div className="mb-6">
-              <div className="flex gap-2 flex-wrap">
-                {['all','jpop','vocaloid','game','etc'].map(cat => (
-                  <button key={cat} onClick={() => filterCat(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${activeCat === cat && !GAMES.includes(activeCat) ? 'bg-blue-500 text-white border-blue-500 shadow' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50'}`}>
-                    {cat === 'all' ? '전체' : cat === 'jpop' ? 'J-pop' : cat === 'vocaloid' ? '보컬로이드' : cat === 'game' ? '일반 게임' : '기타'}
-                  </button>
-                ))}
-                <div className="relative" ref={gameDropRef}>
-                  <button onClick={() => setGameDropOpen(!gameDropOpen)}
-                    className={`flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white border-blue-500 shadow' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50'}`}>
-                    서브컬처 게임
-                    <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-                  </button>
-                  {gameDropOpen && (
-                    <div className="absolute left-0 top-[calc(100%+8px)] z-30 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
-                      {GAMES.map(g => (
-                        <button key={g} onClick={() => filterCat(g, CAT[g].label)}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
-                          {CAT[g].label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              {GAMES.includes(activeCat) && subLabel && (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-xs text-gray-400 font-semibold">세부 필터:</span>
-                  <span className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">{subLabel}</span>
-                  <button onClick={() => filterCat('all')} className="text-xs text-gray-400 hover:text-red-400 transition-colors">✕ 해제</button>
-                </div>
-              )}
             </div>
 
             {loading ? (
@@ -610,16 +585,10 @@ export default function Home() {
                     <input type="file" className="hidden" accept="image/*" onChange={e => uploadImg(e, editorRef, savedRangeRef_w)} />
                   </label>
                 </div>
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  data-placeholder="덕후들을 위한 소식을 작성하세요..."
+                <div ref={editorRef} contentEditable data-placeholder="덕후들을 위한 소식을 작성하세요..."
                   className="editor-area border border-gray-200 border-t-0 text-base leading-relaxed"
-                  onMouseUp={() => saveSelection(savedRangeRef_w)}
-                  onKeyUp={() => saveSelection(savedRangeRef_w)}
-                  onDrop={e => handleDrop(e, editorRef, savedRangeRef_w)}
-                  onDragOver={e => e.preventDefault()}
-                />
+                  onMouseUp={() => saveSelection(savedRangeRef_w)} onKeyUp={() => saveSelection(savedRangeRef_w)}
+                  onDrop={e => handleDrop(e, editorRef, savedRangeRef_w)} onDragOver={e => e.preventDefault()} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={savePost} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-full font-bold shadow-lg transition-all">발행하기</button>
@@ -676,15 +645,10 @@ export default function Home() {
                     <input type="file" className="hidden" accept="image/*" onChange={e => uploadImg(e, editEditorRef, savedRangeRef_e)} />
                   </label>
                 </div>
-                <div
-                  ref={editEditorRef}
-                  contentEditable
+                <div ref={editEditorRef} contentEditable
                   className="editor-area border border-gray-200 border-t-0 text-base leading-relaxed"
-                  onMouseUp={() => saveSelection(savedRangeRef_e)}
-                  onKeyUp={() => saveSelection(savedRangeRef_e)}
-                  onDrop={e => handleDrop(e, editEditorRef, savedRangeRef_e)}
-                  onDragOver={e => e.preventDefault()}
-                />
+                  onMouseUp={() => saveSelection(savedRangeRef_e)} onKeyUp={() => saveSelection(savedRangeRef_e)}
+                  onDrop={e => handleDrop(e, editEditorRef, savedRangeRef_e)} onDragOver={e => e.preventDefault()} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={saveEdit} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-full font-bold shadow-lg transition-all">수정 완료</button>
