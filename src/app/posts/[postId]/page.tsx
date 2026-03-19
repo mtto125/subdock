@@ -737,7 +737,7 @@ async function googleLogin() {
   <div className="flex-1 h-px bg-gray-200" /><span>또는 이메일로</span><div className="flex-1 h-px bg-gray-200" />
 </div>
 <div className="space-y-3">
-  ... (기존 이메일/비밀번호 입력 부분)
+  
         <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="이메일" className="w-full p-4 bg-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300" />
         <input type="password" value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="비밀번호 (6자 이상)" className="w-full p-4 bg-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300" onKeyDown={e => e.key === 'Enter' && emailLogin()} />
         {authErr && <p className="text-red-400 text-xs px-1">{authErr}</p>}
