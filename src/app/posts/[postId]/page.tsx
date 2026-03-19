@@ -77,6 +77,11 @@ export default function PostPage() {
   const editEditorRef = useRef<HTMLDivElement>(null)
   const savedRangeRef = useRef<Range | null>(null)
 
+  const [authOpen, setAuthOpen] = useState(false)
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPass, setAuthPass] = useState('')
+  const [authErr, setAuthErr] = useState('')
+
   useEffect(() => {
     const saved = localStorage.getItem('sd_dark')
     if (saved === 'true') { setDarkMode(true); document.documentElement.classList.add('dark') }
@@ -277,6 +282,15 @@ export default function PostPage() {
     await loadComments(postId, user.id)
     showToast(currentPinned ? '고정 해제됐어요' : '댓글이 고정됐어요')
   }
+
+  async function emailLogin() {
+  setAuthErr('')
+  const { error: e1 } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
+  if (!e1) { showToast('반갑습니다!'); setAuthOpen(false); loadPost(); return }
+  const { error: e2 } = await supabase.auth.signUp({ email: authEmail, password: authPass })
+  if (!e2) { showToast('가입 완료! 환영해요'); setAuthOpen(false); loadPost() }
+  else setAuthErr(e2.message)
+}
 
   function openEditMode() {
     if (!post) return
@@ -575,7 +589,7 @@ export default function PostPage() {
                 </div>
               ) : (
                 <div className="bg-gray-50 rounded-2xl p-5 text-center mb-8">
-                  <p className="text-sm text-gray-400 font-semibold">댓글을 달려면 <a href="/" className="text-blue-500 underline">로그인</a>이 필요해요</p>
+                  <p className="text-sm text-gray-400 font-semibold">댓글을 달려면 <button onClick={() => setAuthOpen(true)} className="text-blue-500 underline">로그인</button>이 필요해요</p>
                 </div>
               )}
               {commentsLoading ? (
@@ -701,6 +715,23 @@ export default function PostPage() {
           </div>
         </div>
       )}
+
+
+{authOpen && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/40 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && setAuthOpen(false)}>
+    <div className="bg-white p-8 rounded-[32px] w-full max-w-sm shadow-2xl slide-up">
+      <h3 className="text-2xl font-black mb-1">Subdock 시작하기</h3>
+      <p className="text-gray-400 text-sm mb-6">로그인하거나 새 계정을 만드세요</p>
+      <div className="space-y-3">
+        <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="이메일" className="w-full p-4 bg-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300" />
+        <input type="password" value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="비밀번호 (6자 이상)" className="w-full p-4 bg-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300" onKeyDown={e => e.key === 'Enter' && emailLogin()} />
+        {authErr && <p className="text-red-400 text-xs px-1">{authErr}</p>}
+        <button onClick={emailLogin} className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-full font-bold transition-all">로그인 / 회원가입</button>
+        <button onClick={() => setAuthOpen(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-full font-bold text-sm transition-all">닫기</button>
+      </div>
+    </div>
+  </div>
+)}
 
       {toast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full text-sm font-semibold shadow-xl z-[9999] whitespace-nowrap fade-in">{toast}</div>

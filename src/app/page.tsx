@@ -194,13 +194,16 @@ export default function Home() {
   }
 
   async function emailLogin() {
-    setAuthErr('')
-    const { error: e1 } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
-    if (!e1) { showToast('반갑습니다!'); setAuthOpen(false); return }
-    const { error: e2 } = await supabase.auth.signUp({ email: authEmail, password: authPass })
-    if (!e2) { showToast('가입 완료! 환영해요'); setAuthOpen(false) }
-    else setAuthErr(e2.message)
-  }
+  setAuthErr('')
+  // 먼저 로그인 시도
+  const { error: e1 } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
+  if (!e1) { showToast('반갑습니다!'); setAuthOpen(false); return }
+
+  // 로그인 실패 시 회원가입 (인증 메일 발송)
+  const { error: e2 } = await supabase.auth.signUp({ email: authEmail, password: authPass })
+  if (!e2) { showToast('인증 메일을 보냈어요! 메일함을 확인해주세요 📬') }
+  else setAuthErr(e2.message)
+}
 
   async function doLogout() { await supabase.auth.signOut(); showToast('로그아웃됐어요') }
 
