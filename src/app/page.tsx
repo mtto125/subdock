@@ -17,14 +17,17 @@ const CAT: Record<string, { label: string; cls: string }> = {
   browndust:   { label: '브라운더스트 2',    cls: 'bg-amber-100 text-amber-700' },
   limbus:      { label: '림버스 컴퍼니',     cls: 'bg-gray-100 text-gray-600' },
   trickle:     { label: '트릭컬 리바이브',   cls: 'bg-emerald-100 text-emerald-700' },
+  vtuber_kr:   { label: '국내 버튜버',       cls: 'bg-rose-100 text-rose-600' },
+  vtuber_jp:   { label: '일본 버튜버',       cls: 'bg-red-100 text-red-600' },
+  vtuber_en:   { label: '영미권 버튜버',     cls: 'bg-orange-100 text-orange-600' },
+  vtuber_etc:  { label: '기타 버튜버',       cls: 'bg-gray-100 text-gray-500' },
+  manga:       { label: '만화',             cls: 'bg-yellow-100 text-yellow-700' },
+  anime:       { label: '애니메이션',        cls: 'bg-cyan-100 text-cyan-600' },
+  webnovel:    { label: '웹소설',            cls: 'bg-lime-100 text-lime-700' },
   jpop:        { label: 'J-pop',            cls: 'bg-fuchsia-100 text-fuchsia-600' },
   vocaloid:    { label: '보컬로이드',        cls: 'bg-indigo-100 text-indigo-600' },
   game:        { label: '일반 게임',         cls: 'bg-gray-100 text-gray-500' },
   etc:         { label: '기타',             cls: 'bg-yellow-100 text-yellow-700' },
-  vtuber_kr:  { label: '국내 버튜버',  cls: 'bg-rose-100 text-rose-600' },
-  vtuber_jp:  { label: '일본 버튜버',  cls: 'bg-red-100 text-red-600' },
-  vtuber_en:  { label: '영미권 버튜버', cls: 'bg-orange-100 text-orange-600' },
-  vtuber_etc: { label: '기타 버튜버',  cls: 'bg-gray-100 text-gray-500' },
 }
 const TIER: Record<string, { label: string; cls: string; icon: string }> = {
   public: { label: '전체 공개',   cls: 'bg-gray-100 text-gray-500',   icon: '🌐' },
@@ -32,7 +35,6 @@ const TIER: Record<string, { label: string; cls: string; icon: string }> = {
   paid:   { label: '구독자 전용', cls: 'bg-yellow-100 text-yellow-700', icon: '⭐' },
 }
 const GAMES = ['genshin','starrail','zzz','wuthering','bluearchive','endfield','nikke','browndust','limbus','trickle']
-
 const VTUBERS = ['vtuber_kr','vtuber_jp','vtuber_en','vtuber_etc']
 
 function Badge({ cat }: { cat: string }) {
@@ -53,7 +55,6 @@ export default function Home() {
   const [activeCat, setActiveCat] = useState('all')
   const [gameDropOpen, setGameDropOpen] = useState(false)
   const [vtuberDropOpen, setVtuberDropOpen] = useState(false)
-  const vtuberDropRef = useRef<HTMLDivElement>(null)
   const [subLabel, setSubLabel] = useState('')
   const [authOpen, setAuthOpen] = useState(false)
   const [betaOk, setBetaOk] = useState(false)
@@ -77,6 +78,7 @@ export default function Home() {
   const [editCat, setEditCat] = useState('')
   const [editTier, setEditTier] = useState('public')
   const gameDropRef = useRef<HTMLDivElement>(null)
+  const vtuberDropRef = useRef<HTMLDivElement>(null)
   const searchTimer = useRef<NodeJS.Timeout | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -131,13 +133,13 @@ export default function Home() {
   useEffect(() => { if (betaOk) loadPosts(activeCat) }, [betaOk, activeCat])
 
   useEffect(() => {
-  function handleClick(e: MouseEvent) {
-    if (gameDropRef.current && !gameDropRef.current.contains(e.target as Node)) setGameDropOpen(false)
-    if (vtuberDropRef.current && !vtuberDropRef.current.contains(e.target as Node)) setVtuberDropOpen(false)
-  }
-  document.addEventListener('mousedown', handleClick)
-  return () => document.removeEventListener('mousedown', handleClick)
-}, [])
+    function handleClick(e: MouseEvent) {
+      if (gameDropRef.current && !gameDropRef.current.contains(e.target as Node)) setGameDropOpen(false)
+      if (vtuberDropRef.current && !vtuberDropRef.current.contains(e.target as Node)) setVtuberDropOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   async function loadProfile(uid: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', uid).single()
@@ -361,7 +363,7 @@ export default function Home() {
   }
 
   function filterCat(cat: string, label?: string) {
-    setActiveCat(cat); setSubLabel(label || ''); setGameDropOpen(false)
+    setActiveCat(cat); setSubLabel(label || ''); setGameDropOpen(false); setVtuberDropOpen(false)
     if (view !== 'feed') setView('feed')
   }
 
@@ -376,6 +378,8 @@ export default function Home() {
       </button>
     )
   }
+
+  const isSpecialCat = GAMES.includes(activeCat) || VTUBERS.includes(activeCat)
 
   if (!betaOk) return (
     <div className="fixed inset-0 bg-white flex items-center justify-center p-5">
@@ -399,7 +403,6 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* NAV */}
       <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-gray-200">
-        {/* 상단 바 */}
         <div className="max-w-6xl mx-auto px-5 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-blue-500 cursor-pointer"
@@ -435,55 +438,64 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 카테고리 탭 — 피드 뷰일 때만 표시 */}
+        {/* 카테고리 탭 */}
         {view === 'feed' && (
-  <div className="max-w-6xl mx-auto px-5 pb-3">
-    <div className="flex gap-2 overflow-x-visible">
-      {(['all','jpop','vocaloid','game','etc'] as const).map(cat => (
-        <button key={cat} onClick={() => filterCat(cat)}
-          className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat && !GAMES.includes(activeCat) && !VTUBERS.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
-          {cat === 'all' ? '전체' : cat === 'jpop' ? 'J-pop' : cat === 'vocaloid' ? '보컬로이드' : cat === 'game' ? '일반 게임' : '기타'}
-        </button>
-      ))}
-      {/* 서브컬처 게임 드롭다운 */}
-      <div className="relative flex-shrink-0" ref={gameDropRef}>
-        <button onClick={() => setGameDropOpen(!gameDropOpen)}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
-          {GAMES.includes(activeCat) && subLabel ? subLabel : '서브컬처 게임'}
-          <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-        </button>
-        {gameDropOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
-            {GAMES.map(g => (
-              <button key={g} onClick={() => filterCat(g, CAT[g].label)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
-                {CAT[g].label}
+          <div className="max-w-6xl mx-auto px-5 pb-3">
+            <div className="flex gap-2 overflow-x-visible">
+              {/* 전체 */}
+              <button onClick={() => filterCat('all')}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === 'all' ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                전체
               </button>
-            ))}
+
+              {/* 서브컬처 게임 드롭다운 */}
+              <div className="relative flex-shrink-0" ref={gameDropRef}>
+                <button onClick={() => setGameDropOpen(!gameDropOpen)}
+                  className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                  {GAMES.includes(activeCat) && subLabel ? subLabel : '서브컬처 게임'}
+                  <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {gameDropOpen && (
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
+                    {GAMES.map(g => (
+                      <button key={g} onClick={() => filterCat(g, CAT[g].label)}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
+                        {CAT[g].label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 버튜버 드롭다운 */}
+              <div className="relative flex-shrink-0" ref={vtuberDropRef}>
+                <button onClick={() => setVtuberDropOpen(!vtuberDropOpen)}
+                  className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${VTUBERS.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                  {VTUBERS.includes(activeCat) && subLabel ? subLabel : '버튜버'}
+                  <svg className={`w-3.5 h-3.5 transition-transform ${vtuberDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {vtuberDropOpen && (
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[160px]">
+                    {VTUBERS.map(v => (
+                      <button key={v} onClick={() => filterCat(v, CAT[v].label)}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === v ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
+                        {CAT[v].label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 단일 카테고리들 */}
+              {(['manga','anime','webnovel','vocaloid','etc'] as const).map(cat => (
+                <button key={cat} onClick={() => filterCat(cat)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+                  {CAT[cat].label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-      </div>
-      {/* 버튜버 드롭다운 */}
-      <div className="relative flex-shrink-0" ref={vtuberDropRef}>
-        <button onClick={() => setVtuberDropOpen(!vtuberDropOpen)}
-          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${VTUBERS.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
-          {VTUBERS.includes(activeCat) && subLabel ? subLabel : '버튜버'}
-          <svg className={`w-3.5 h-3.5 transition-transform ${vtuberDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-        </button>
-        {vtuberDropOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[160px]">
-            {VTUBERS.map(v => (
-              <button key={v} onClick={() => filterCat(v, CAT[v].label)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === v ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
-                {CAT[v].label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
       </nav>
 
       <main className="max-w-6xl mx-auto px-5 py-10">
@@ -493,7 +505,7 @@ export default function Home() {
           <div className="fade-in">
             <div className="mb-8">
               <h2 className="text-4xl font-black mb-2 tracking-tight">
-                {activeCat === 'all' ? '최신 도킹 소식' : GAMES.includes(activeCat) ? subLabel || CAT[activeCat]?.label : CAT[activeCat]?.label || '최신 도킹 소식'}
+                {activeCat === 'all' ? '최신 도킹 소식' : isSpecialCat ? subLabel || CAT[activeCat]?.label : CAT[activeCat]?.label || '최신 도킹 소식'}
               </h2>
               <p className="text-gray-400 text-sm">서브컬처 덕후들이 직접 정리한 정보들</p>
             </div>
@@ -578,7 +590,14 @@ export default function Home() {
                 <select value={wCat} onChange={e => setWCat(e.target.value)} className="w-full p-4 bg-gray-100 rounded-2xl font-semibold outline-none focus:bg-blue-50 cursor-pointer">
                   <option value="">카테고리를 선택하세요</option>
                   <optgroup label="── 서브컬처 게임">{GAMES.map(g => <option key={g} value={g}>{CAT[g].label}</option>)}</optgroup>
-                  <optgroup label="── 음악"><option value="jpop">J-pop</option><option value="vocaloid">보컬로이드</option></optgroup>
+                  <optgroup label="── 버튜버">{VTUBERS.map(v => <option key={v} value={v}>{CAT[v].label}</option>)}</optgroup>
+                  <optgroup label="── 서브컬처">
+                    <option value="manga">만화</option>
+                    <option value="anime">애니메이션</option>
+                    <option value="webnovel">웹소설</option>
+                    <option value="vocaloid">보컬로이드</option>
+                    <option value="jpop">J-pop</option>
+                  </optgroup>
                   <optgroup label="── 기타"><option value="game">일반 게임</option><option value="etc">기타</option></optgroup>
                 </select>
               </div>
@@ -639,7 +658,14 @@ export default function Home() {
                 <label className="text-xs font-bold text-gray-400 mb-2 block">카테고리</label>
                 <select value={editCat} onChange={e => setEditCat(e.target.value)} className="w-full p-4 bg-gray-100 rounded-2xl font-semibold outline-none focus:bg-blue-50 cursor-pointer">
                   <optgroup label="── 서브컬처 게임">{GAMES.map(g => <option key={g} value={g}>{CAT[g].label}</option>)}</optgroup>
-                  <optgroup label="── 음악"><option value="jpop">J-pop</option><option value="vocaloid">보컬로이드</option></optgroup>
+                  <optgroup label="── 버튜버">{VTUBERS.map(v => <option key={v} value={v}>{CAT[v].label}</option>)}</optgroup>
+                  <optgroup label="── 서브컬처">
+                    <option value="manga">만화</option>
+                    <option value="anime">애니메이션</option>
+                    <option value="webnovel">웹소설</option>
+                    <option value="vocaloid">보컬로이드</option>
+                    <option value="jpop">J-pop</option>
+                  </optgroup>
                   <optgroup label="── 기타"><option value="game">일반 게임</option><option value="etc">기타</option></optgroup>
                 </select>
               </div>
@@ -693,32 +719,21 @@ export default function Home() {
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <input
-                  autoFocus
-                  value={searchQuery}
-                  onChange={e => handleSearch(e.target.value)}
+                <input autoFocus value={searchQuery} onChange={e => handleSearch(e.target.value)}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && searchQuery.trim()) {
-                      setSearchOpen(false)
-                      setSearchQuery('')
-                      setSearchResults([])
+                      setSearchOpen(false); setSearchQuery(''); setSearchResults([])
                       router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
                     }
                   }}
                   placeholder="제목, 내용, 닉네임으로 검색..."
                   className="flex-1 text-base outline-none bg-transparent font-semibold placeholder:text-gray-300" />
-                <button
-                  onClick={() => {
-                    if (searchQuery.trim()) {
-                      setSearchOpen(false)
-                      setSearchQuery('')
-                      setSearchResults([])
-                      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-                    }
-                  }}
-                  className="text-blue-500 hover:text-blue-600 font-bold text-sm transition-all flex-shrink-0">
-                  검색
-                </button>
+                <button onClick={() => {
+                  if (searchQuery.trim()) {
+                    setSearchOpen(false); setSearchQuery(''); setSearchResults([])
+                    router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                  }
+                }} className="text-blue-500 hover:text-blue-600 font-bold text-sm transition-all flex-shrink-0">검색</button>
                 <button onClick={() => { setSearchOpen(false); setSearchQuery(''); setSearchResults([]) }} className="text-gray-400 hover:text-gray-600 transition-all">✕</button>
               </div>
             </div>
@@ -743,14 +758,10 @@ export default function Home() {
                     </div>
                   ))}
                   {searchResults.length > 0 && (
-                    <button
-                      onClick={() => {
-                        setSearchOpen(false)
-                        setSearchQuery('')
-                        setSearchResults([])
-                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-                      }}
-                      className="w-full mt-2 py-3 text-sm font-bold text-blue-500 hover:bg-blue-50 rounded-2xl transition-all">
+                    <button onClick={() => {
+                      setSearchOpen(false); setSearchQuery(''); setSearchResults([])
+                      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+                    }} className="w-full mt-2 py-3 text-sm font-bold text-blue-500 hover:bg-blue-50 rounded-2xl transition-all">
                       검색 결과 전체 보기 →
                     </button>
                   )}
