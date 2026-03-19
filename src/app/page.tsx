@@ -21,6 +21,10 @@ const CAT: Record<string, { label: string; cls: string }> = {
   vocaloid:    { label: '보컬로이드',        cls: 'bg-indigo-100 text-indigo-600' },
   game:        { label: '일반 게임',         cls: 'bg-gray-100 text-gray-500' },
   etc:         { label: '기타',             cls: 'bg-yellow-100 text-yellow-700' },
+  vtuber_kr:  { label: '국내 버튜버',  cls: 'bg-rose-100 text-rose-600' },
+  vtuber_jp:  { label: '일본 버튜버',  cls: 'bg-red-100 text-red-600' },
+  vtuber_en:  { label: '영미권 버튜버', cls: 'bg-orange-100 text-orange-600' },
+  vtuber_etc: { label: '기타 버튜버',  cls: 'bg-gray-100 text-gray-500' },
 }
 const TIER: Record<string, { label: string; cls: string; icon: string }> = {
   public: { label: '전체 공개',   cls: 'bg-gray-100 text-gray-500',   icon: '🌐' },
@@ -28,6 +32,8 @@ const TIER: Record<string, { label: string; cls: string; icon: string }> = {
   paid:   { label: '구독자 전용', cls: 'bg-yellow-100 text-yellow-700', icon: '⭐' },
 }
 const GAMES = ['genshin','starrail','zzz','wuthering','bluearchive','endfield','nikke','browndust','limbus','trickle']
+
+const VTUBERS = ['vtuber_kr','vtuber_jp','vtuber_en','vtuber_etc']
 
 function Badge({ cat }: { cat: string }) {
   const m = CAT[cat] || { label: cat, cls: 'bg-gray-100 text-gray-500' }
@@ -46,6 +52,8 @@ export default function Home() {
   const [view, setView] = useState<'feed' | 'write' | 'edit'>('feed')
   const [activeCat, setActiveCat] = useState('all')
   const [gameDropOpen, setGameDropOpen] = useState(false)
+  const [vtuberDropOpen, setVtuberDropOpen] = useState(false)
+  const vtuberDropRef = useRef<HTMLDivElement>(null)
   const [subLabel, setSubLabel] = useState('')
   const [authOpen, setAuthOpen] = useState(false)
   const [betaOk, setBetaOk] = useState(false)
@@ -123,12 +131,13 @@ export default function Home() {
   useEffect(() => { if (betaOk) loadPosts(activeCat) }, [betaOk, activeCat])
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (gameDropRef.current && !gameDropRef.current.contains(e.target as Node)) setGameDropOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  function handleClick(e: MouseEvent) {
+    if (gameDropRef.current && !gameDropRef.current.contains(e.target as Node)) setGameDropOpen(false)
+    if (vtuberDropRef.current && !vtuberDropRef.current.contains(e.target as Node)) setVtuberDropOpen(false)
+  }
+  document.addEventListener('mousedown', handleClick)
+  return () => document.removeEventListener('mousedown', handleClick)
+}, [])
 
   async function loadProfile(uid: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', uid).single()
@@ -428,35 +437,53 @@ export default function Home() {
 
         {/* 카테고리 탭 — 피드 뷰일 때만 표시 */}
         {view === 'feed' && (
-          <div className="max-w-6xl mx-auto px-5 pb-3">
-            <div className="flex gap-2 overflow-x-visible">
-              {(['all','jpop','vocaloid','game','etc'] as const).map(cat => (
-                <button key={cat} onClick={() => filterCat(cat)}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat && !GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
-                  {cat === 'all' ? '전체' : cat === 'jpop' ? 'J-pop' : cat === 'vocaloid' ? '보컬로이드' : cat === 'game' ? '일반 게임' : '기타'}
-                </button>
-              ))}
-              {/* 서브컬처 게임 드롭다운 */}
-              <div className="relative flex-shrink-0" ref={gameDropRef}>
-                <button onClick={() => setGameDropOpen(!gameDropOpen)}
-                  className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
-                  {GAMES.includes(activeCat) && subLabel ? subLabel : '서브컬처 게임'}
-                  <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                {gameDropOpen && (
-                  <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
-                    {GAMES.map(g => (
-                      <button key={g} onClick={() => filterCat(g, CAT[g].label)}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
-                        {CAT[g].label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+  <div className="max-w-6xl mx-auto px-5 pb-3">
+    <div className="flex gap-2 overflow-x-visible">
+      {(['all','jpop','vocaloid','game','etc'] as const).map(cat => (
+        <button key={cat} onClick={() => filterCat(cat)}
+          className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat && !GAMES.includes(activeCat) && !VTUBERS.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+          {cat === 'all' ? '전체' : cat === 'jpop' ? 'J-pop' : cat === 'vocaloid' ? '보컬로이드' : cat === 'game' ? '일반 게임' : '기타'}
+        </button>
+      ))}
+      {/* 서브컬처 게임 드롭다운 */}
+      <div className="relative flex-shrink-0" ref={gameDropRef}>
+        <button onClick={() => setGameDropOpen(!gameDropOpen)}
+          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+          {GAMES.includes(activeCat) && subLabel ? subLabel : '서브컬처 게임'}
+          <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        {gameDropOpen && (
+          <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
+            {GAMES.map(g => (
+              <button key={g} onClick={() => filterCat(g, CAT[g].label)}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
+                {CAT[g].label}
+              </button>
+            ))}
           </div>
         )}
+      </div>
+      {/* 버튜버 드롭다운 */}
+      <div className="relative flex-shrink-0" ref={vtuberDropRef}>
+        <button onClick={() => setVtuberDropOpen(!vtuberDropOpen)}
+          className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${VTUBERS.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
+          {VTUBERS.includes(activeCat) && subLabel ? subLabel : '버튜버'}
+          <svg className={`w-3.5 h-3.5 transition-transform ${vtuberDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+        </button>
+        {vtuberDropOpen && (
+          <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[160px]">
+            {VTUBERS.map(v => (
+              <button key={v} onClick={() => filterCat(v, CAT[v].label)}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === v ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
+                {CAT[v].label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
       </nav>
 
       <main className="max-w-6xl mx-auto px-5 py-10">
