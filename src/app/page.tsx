@@ -429,7 +429,7 @@ export default function Home() {
         {/* 카테고리 탭 — 피드 뷰일 때만 표시 */}
         {view === 'feed' && (
           <div className="max-w-6xl mx-auto px-5 pb-3">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 overflow-x-visible">
               {(['all','jpop','vocaloid','game','etc'] as const).map(cat => (
                 <button key={cat} onClick={() => filterCat(cat)}
                   className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${activeCat === cat && !GAMES.includes(activeCat) ? 'bg-blue-500 text-white shadow' : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'}`}>
@@ -444,7 +444,7 @@ export default function Home() {
                   <svg className={`w-3.5 h-3.5 transition-transform ${gameDropOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 {gameDropOpen && (
-                  <div className="absolute left-0 top-[calc(100%+8px)] z-30 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-[200] bg-white border border-gray-200 rounded-2xl shadow-xl p-2 min-w-[210px]">
                     {GAMES.map(g => (
                       <button key={g} onClick={() => filterCat(g, CAT[g].label)}
                         className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-gray-100 hover:text-blue-500 ${activeCat === g ? 'bg-blue-50 text-blue-500' : 'text-gray-700'}`}>
