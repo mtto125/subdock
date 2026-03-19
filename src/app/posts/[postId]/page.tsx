@@ -135,18 +135,46 @@ export default function PostPage() {
   }
 
   async function loadComments(pid: string, uid?: string) {
-    setCommentsLoading(true)
-    const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', pid)
-    if (!commentsData) { setCommentsLoading(false); return }
-    const withLikes: CommentWithLikes[] = await Promise.all(commentsData.map(async (c: Comment) => {
-      const { count } = await supabase.from('comment_likes').select('*', { count: 'exact', head: true }).eq('comment_id', c.id)
-      const isLiked = uid ? (await supabase.from('comment_likes').select('id').eq('comment_id', c.id).eq('user_id', uid)).data?.length! > 0 : false
-      const { data: profileData } = await supabase.from('profiles').select('avatar_url').eq('id', c.user_id).single()
-      return { ...c, likeCount: count || 0, isLiked, avatar_url: profileData?.avatar_url || '' }
-    }))
-    setComments(withLikes)
-    setCommentsLoading(false)
-  }
+  setCommentsLoading(true)
+
+  // 1번 요청: 댓글 + 프로필 한번에 조회
+  const { data: commentsData } = await supabase
+    .from('comments')
+    .select('*, profiles(avatar_url)')
+    .eq('post_id', pid)
+
+  if (!commentsData) { setCommentsLoading(false); return }
+
+  // 2번 요청: 댓글 좋아요 수 한번에 조회
+  const commentIds = commentsData.map((c: any) => c.id)
+  const { data: likesData } = await supabase
+    .from('comment_likes')
+    .select('comment_id')
+    .in('comment_id', commentIds)
+
+  // 3번 요청: 내가 좋아요한 댓글 한번에 조회
+  const { data: myLikesData } = uid ? await supabase
+    .from('comment_likes')
+    .select('comment_id')
+    .eq('user_id', uid)
+    .in('comment_id', commentIds) : { data: [] }
+
+  const likeCountMap: Record<string, number> = {}
+  const myLikeSet = new Set((myLikesData || []).map((l: any) => l.comment_id))
+  ;(likesData || []).forEach((l: any) => {
+    likeCountMap[l.comment_id] = (likeCountMap[l.comment_id] || 0) + 1
+  })
+
+  const withLikes: CommentWithLikes[] = commentsData.map((c: any) => ({
+    ...c,
+    likeCount: likeCountMap[c.id] || 0,
+    isLiked: myLikeSet.has(c.id),
+    avatar_url: c.profiles?.avatar_url || '',
+  }))
+
+  setComments(withLikes)
+  setCommentsLoading(false)
+}
 
   function getSortedComments() {
     const pinned = comments.filter(c => c.is_pinned)
