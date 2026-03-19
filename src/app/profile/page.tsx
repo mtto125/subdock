@@ -212,8 +212,8 @@ export default function ProfilePage() {
 
       <main className="max-w-4xl mx-auto px-5 py-10">
         <div className="flex gap-1 mb-8 border-b border-gray-200 pb-2">
-          <button onClick={() => setTab('profile')} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'profile' ? 'bg-blue-50 text-blue-500' : 'text-gray-400 hover:bg-gray-100'}`}>👤 내 프로필</button>
-          <button onClick={() => setTab('settings')} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'settings' ? 'bg-blue-50 text-blue-500' : 'text-gray-400 hover:bg-gray-100'}`}>⚙️ 환경 설정</button>
+          <button onClick={() => setTab('profile')} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'profile' ? 'bg-blue-50 text-blue-500' : 'text-gray-400 hover:bg-gray-100'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> 내 프로필</button>
+          <button onClick={() => setTab('settings')} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'settings' ? 'bg-blue-50 text-blue-500' : 'text-gray-400 hover:bg-gray-100'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> 환경 설정</button>
         </div>
 
         {tab === 'profile' && (
@@ -230,7 +230,7 @@ export default function ProfilePage() {
                 <p className="text-gray-400 text-sm mb-2">{profile?.bio || '소개글이 없어요.'}</p>
                 <p className="text-sm font-bold text-blue-500 mb-5">구독자 {subscriberCount.toLocaleString()}명</p>
                 <div className="flex gap-2 justify-center md:justify-start">
-                  <button onClick={() => setTab('settings')} className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-2 rounded-full text-sm font-bold transition-all">⚙️ 환경 설정</button>
+                  <button onClick={() => setTab('settings')} className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-2 rounded-full text-sm font-bold transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> 환경 설정</button>
                   <button onClick={doLogout} className="bg-red-50 hover:bg-red-100 text-red-500 px-5 py-2 rounded-full text-sm font-bold transition-all">로그아웃</button>
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                   <div className="relative flex-shrink-0">
                     <img src={avatarUrl} className="w-20 h-20 rounded-full object-cover bg-gray-200" alt="" />
                     <label className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-xs border-2 border-white transition-all">
-                      ✏️<input type="file" className="hidden" accept="image/*" onChange={uploadAvatar} />
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg><input type="file" className="hidden" accept="image/*" onChange={uploadAvatar} />
                     </label>
                   </div>
                   <div><p className="font-bold text-sm mb-1">프로필 사진</p><p className="text-gray-400 text-xs">JPG, PNG 파일을 업로드해주세요</p></div>
