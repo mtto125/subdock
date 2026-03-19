@@ -238,10 +238,12 @@ export default function PostPage() {
   }
 
   async function togglePinComment(commentId: string, currentPinned: boolean) {
-    if (!user || !post || post.author_id !== user.id) return
-    await supabase.from('comments').update({ is_pinned: !currentPinned }).eq('id', commentId)
-    loadComments(postId, user.id); showToast(currentPinned ? '고정 해제됐어요' : '댓글이 고정됐어요')
-  }
+  if (!user || !post || post.author_id !== user.id) return
+  const { error } = await supabase.from('comments').update({ is_pinned: !currentPinned }).eq('id', commentId)
+  if (error) { showToast('오류가 발생했어요'); return }
+  await loadComments(postId, user.id)
+  showToast(currentPinned ? '고정 해제됐어요' : '댓글이 고정됐어요')
+}
 
   function openEditMode() {
     if (!post) return
